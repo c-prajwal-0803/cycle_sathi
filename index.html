@@ -85,6 +85,16 @@
     <div class="row g-3">
       <div class="col-md-6"><label>Name</label><input id="name" class="form-control"></div>
       <div class="col-md-3"><label>Age</label><input id="age" type="number" class="form-control"></div>
+      <div class="col-md-3">
+        <label>Gender</label>
+        <select id="gender" class="form-select">
+          <option value="">Select Gender</option>
+          <option value="Female">Female</option>
+          <option value="Male">Male</option>
+          <option value="Other">Other</option>
+          <option value="Prefer not to say">Prefer not to say</option>
+        </select>
+      </div>
       <div class="col-md-3"><label>Cycle Length (days)</label><input id="cycleLen" type="number" class="form-control"></div>
       <div class="col-md-6"><label>Allergies</label><input id="allergies" class="form-control"></div>
       <div class="col-md-6"><label>Medical Conditions</label><input id="conditions" class="form-control"></div>
@@ -111,10 +121,13 @@
     </div>
     <h5 class="mt-4">Symptoms</h5>
     <div class="row g-3">
-      <div class="col-md-6"><label>Flow Level</label>
+      <div class="col-md-4"><label>Flow Level</label>
         <select id="flow" class="form-select"><option>Light</option><option>Moderate</option><option>Heavy</option></select>
       </div>
-      <div class="col-md-6"><label>Pain Level</label><input type="range" id="pain" min="0" max="10" class="form-range"></div>
+      <div class="col-md-4"><label>Pain Level</label><input type="range" id="pain" min="0" max="10" class="form-range"></div>
+      <div class="col-md-4"><label>Period Colour</label>
+        <input type="color" id="periodColor" class="form-control form-control-color" value="#ff8fa3">
+      </div>
     </div>
     <button class="btn btn-primary mt-3 px-4" onclick="saveSymptoms()">Save & Predict</button>
     <h5 class="mt-4">Predictions</h5>
@@ -129,34 +142,30 @@
 <!-- ==== LEARN ==== -->
 <section id="learn" class="section">
   <div class="card-box">
-    <h3>Learn & Ask</h3>
-    <p class="text-muted">Ask menstrual health, symptoms, or diet‑related questions and get AI guidance.</p>
-    <div class="mb-3">
-      <label class="fw-semibold">Your question:</label>
-      <input id="question" class="form-control" placeholder="e.g. What foods help reduce cramps?">
+    <h3>Learn & Ask</h3>
+    <p class="text-muted">Ask menstrual health, symptom, or diet questions for AI guidance.</p>
+    <div class="mb-3"><label class="fw-semibold">Your question:</label>
+      <input id="question" class="form-control" placeholder="e.g. What foods help reduce cramps?">
     </div>
     <button class="btn btn-primary mb-3" onclick="askQuestion()">Ask</button>
-    <div>
-      <label class="fw-semibold">Answer:</label>
-      <textarea id="answer" class="form-control" rows="5" readonly placeholder="Your answer will appear here..."></textarea>
+    <div><label class="fw-semibold">Answer:</label>
+      <textarea id="answer" class="form-control" rows="5" readonly placeholder="Your answer will appear here..."></textarea>
     </div>
-    <button id="listenBtn" class="btn mt-3" onclick="speakAnswer()">🔊 Listen to answer</button>
+    <button id="listenBtn" class="btn mt-3" onclick="speakAnswer()">🔊 Listen to answer</button>
   </div>
 </section>
 
 <!-- ==== RECORDS ==== -->
 <section id="records" class="section">
   <div class="card-box">
-    <h3>Records History</h3>
-    <p class="text-muted">Complete saved history from both Cycle and Profile sections.</p>
-    <div style="max-height:450px;overflow-y:auto;border:1px solid #e5d1f7;border-radius:10px;">
+    <h3>Records History</h3>
+    <p class="text-muted">All saved Profile and Cycle entries.</p>
+    <div style="max-height:450px;overflow-y:auto;border:1px solid #e5d1f7;border-radius:10px;">
       <table class="table table-striped align-middle mb-0">
         <thead style="background:#f4e7fb;position:sticky;top:0;">
           <tr><th>Timestamp</th><th>Category</th><th>Data</th></tr>
         </thead>
-        <tbody id="recordsTableBody">
-          <tr><td colspan="3" class="text-center text-muted">No records yet</td></tr>
-        </tbody>
+        <tbody id="recordsTableBody"><tr><td colspan="3" class="text-center text-muted">No records yet</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -166,48 +175,140 @@
 </div>
 
 <script>
-/* ==================== AUTH ==================== */
 function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");}
-function registerUser(){const e=signEmail.value.trim(),p=signPass.value,c=signConf.value;if(!e||!p){alert("Fill all fields");return;}if(p!==c){alert("Passwords do not match");return;}localStorage.setItem("userEmail",e);localStorage.setItem("userPass",p);alert("Sign‑Up successful! Please login.");showScreen("screen2");}
-function loginUser(){const e=loginEmail.value.trim(),p=loginPass.value;const se=localStorage.getItem("userEmail"),sp=localStorage.getItem("userPass");if(e===se&&p===sp){alert("Login successful!");localStorage.setItem("currentUser",e);showScreen("home");loadUserData(e);}else{alert("Invalid credentials. Try again or Sign up.");}}
-function logout(){alert("Logged out successfully!");showScreen("screen2");localStorage.removeItem("currentUser");}
 
-/* ==================== NAV ==================== */
-function showSection(id){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active-section"));document.getElementById(id).classList.add("active-section");}
+function registerUser(){
+  const e=signEmail.value.trim(),p=signPass.value,c=signConf.value;
+  if(!e||!p){alert("Fill all fields");return;}
+  if(p!==c){alert("Passwords don’t match");return;}
+  localStorage.setItem("userEmail",e); localStorage.setItem("userPass",p);
+  alert("Sign‑up successful!"); showScreen("screen2");
+}
 
-/* ==================== PROFILE ==================== */
-function saveProfile(){const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}const prefix=email+"_";["name","age","cycleLen","allergies","conditions","notes"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));alert("Profile saved!");addRecord("profile",{Name:name.value,Age:age.value,Cycle_Length:cycleLen.value,Allergies:allergies.value,Conditions:conditions.value,Notes:notes.value,Heart_Rate:heart.value||"",O2:o2.value||"",Movement:moves.value||"",Temperature:temp.value||""});}
+function loginUser(){
+  const e=loginEmail.value.trim(),p=loginPass.value;
+  const se=localStorage.getItem("userEmail"),sp=localStorage.getItem("userPass");
+  if(e===se&&p===sp){
+    alert("Login successful!");
+    localStorage.setItem("currentUser",e);
+    const hasProfile=localStorage.getItem(e+"_name")||localStorage.getItem(e+"_records");
+    if(!hasProfile){resetAllData();}
+    showScreen("home");
+    loadUserData(e);
+  } else alert("Invalid credentials.");
+}
 
-/* ==================== TRACK ==================== */
-function saveSymptoms(){const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}const prefix=email+"_";const start=startDate.value;if(!start){alert("Select Start Date");return;}const sDate=new Date(start);const addDays=d=>new Date(sDate.getTime()+d*86400000).toLocaleDateString();nextPeriod.value=addDays(28);ovulation.value=addDays(14);fertile.value=`${addDays(10)} to ${addDays(15)}`;localStorage.setItem(prefix+"startDate",start);localStorage.setItem(prefix+"endDate",endDate.value);localStorage.setItem(prefix+"flow",flow.value);localStorage.setItem(prefix+"pain",pain.value);alert("Symptoms saved!");addRecord("track",{Name:name.value||localStorage.getItem(prefix+"name")||"(no name)",Start_Date:startDate.value,End_Date:endDate.value,Flow:flow.value,Pain_Level:pain.value,Next_Period:nextPeriod.value,Ovulation:ovulation.value,Fertile_Window:fertile.value});}
+function logout(){
+  alert("Logged out successfully!");
+  showScreen("screen2");
+  localStorage.removeItem("currentUser");
+}
 
-/* ==================== RECORDS ==================== */
-function addRecord(type,dataObj){const email=localStorage.getItem("currentUser");if(!email)return;const prefix=email+"_";const storedName=localStorage.getItem(prefix+"name")||"(not set)";if(!dataObj.Name)dataObj.Name=storedName;const timestamp=new Date().toLocaleString();const recs=JSON.parse(localStorage.getItem(prefix+"records")||"[]");recs.push({type,data:dataObj,time:timestamp});localStorage.setItem(prefix+"records",JSON.stringify(recs));loadRecords(email);}
-function loadRecords(email){const tbody=document.getElementById("recordsTableBody");if(!tbody)return;const prefix=email+"_";const records=JSON.parse(localStorage.getItem(prefix+"records")||"[]").reverse();if(!records.length){tbody.innerHTML=`<tr><td colspan="3" class="text-center text-muted">No records yet</td></tr>`;return;}tbody.innerHTML=records.map(r=>{const entries=Object.entries(r.data);const nameEntry=entries.find(([k])=>k==="Name");const other=entries.filter(([k])=>k!=="Name");const details=(nameEntry?`<div><strong>${nameEntry[0]}</strong>: ${nameEntry[1]||"-"}</div>`:"")+other.map(([k,v])=>`<div><strong>${k}</strong>: ${v||"-"}</div>`).join("");return`<tr><td>${r.time}</td><td>${r.type==="track"?"Cycle Tracking":"Profile"}</td><td>${details}</td></tr>`;}).join("");}
+function showSection(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active-section"));
+  const el=document.getElementById(id);if(el)el.classList.add("active-section");
+}
 
-/* ==================== LEARN with GEMINI ==================== */
+function saveProfile(){
+ const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}
+ const prefix=email+"_";
+ ["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));
+ alert("Profile saved!");
+ addRecord("profile",{Name:name.value,Age:age.value,Gender:gender.value,Cycle_Length:cycleLen.value,Allergies:allergies.value,Conditions:conditions.value,Notes:notes.value,Heart_Rate:heart.value||"",O2:o2.value||"",Movement:moves.value||"",Temperature:temp.value||""});
+}
+
+function saveSymptoms(){
+ const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}
+ const prefix=email+"_", start=startDate.value;if(!start){alert("Select Start Date");return;}
+ const sDate=new Date(start),addDays=d=>new Date(sDate.getTime()+d*86400000).toLocaleDateString();
+ nextPeriod.value=addDays(28);ovulation.value=addDays(14);fertile.value=`${addDays(10)} to ${addDays(15)}`;
+ ["startDate","endDate","flow","pain","periodColor"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));
+ alert("Symptoms saved!");
+ addRecord("track",{Name:name.value||localStorage.getItem(prefix+"name")||"(no name)",Start_Date:startDate.value,End_Date:endDate.value,Flow:flow.value,Pain_Level:pain.value,Period_Colour:periodColor.value,Next_Period:nextPeriod.value,Ovulation:ovulation.value,Fertile_Window:fertile.value});
+}
+
+/* ----- RECORDS ----- */
+function addRecord(type,dataObj){
+  const email=localStorage.getItem("currentUser");if(!email)return;
+  const prefix=email+"_";
+  const storedName=localStorage.getItem(prefix+"name")||"(not set)";
+  if(!dataObj.Name)dataObj.Name=storedName;
+  const timestamp=new Date().toLocaleString();
+  const recs=JSON.parse(localStorage.getItem(prefix+"records")||"[]");
+  recs.push({type,data:dataObj,time:timestamp});
+  localStorage.setItem(prefix+"records",JSON.stringify(recs));
+  loadRecords(email);
+}
+
+function loadRecords(email){
+  const tbody=document.getElementById("recordsTableBody");if(!tbody)return;
+  const prefix=email+"_";
+  const records=JSON.parse(localStorage.getItem(prefix+"records")||"[]").reverse();
+  if(!records.length){tbody.innerHTML=`<tr><td colspan="3" class="text-center text-muted">No records yet</td></tr>`;return;}
+  tbody.innerHTML=records.map(r=>{
+    const entries=Object.entries(r.data),
+          nameEntry=entries.find(([k])=>k==="Name"),
+          other=entries.filter(([k])=>k!=="Name");
+    const details=(nameEntry?`<div><strong>${nameEntry[0]}</strong>: ${nameEntry[1]||"-"}</div>`:"")+
+      other.map(([k,v])=>{
+        if(k==="Period_Colour"){return `<div><strong>${k}</strong>: <span style="display:inline-block;width:20px;height:20px;background:${v};border:1px solid #ccc;margin-left:5px;vertical-align:middle;"></span> ${v}</div>`;}
+        return `<div><strong>${k}</strong>: ${v||"-"}</div>`;
+      }).join("");
+    return `<tr><td>${r.time}</td><td>${r.type==="track"?"Cycle Tracking":"Profile"}</td><td>${details}</td></tr>`;
+  }).join("");
+}
+
+/* ----- LEARN (GEMINI API) ----- */
 async function askQuestion(){
-  const q=question.value.trim();const ansBox=answer;
+  const q=question.value.trim(),ansBox=answer;
   if(!q){alert("Please enter a question about menstrual cycle or diet.");return;}
   ansBox.value="Thinking...";
   try{
-    const GEMINI_KEY="AIzaSyApR29apHfoAMu2jJnL3bBb6GgcZvWy4Dg"; // 🔹 paste your new API key here
-    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        contents:[{parts:[{text:`You are Cycle Sathi, a friendly assistant providing factual menstrual health, nutrition, and wellness advice.\nQuestion: ${q}` }]}]
-      })
+    const GEMINI_KEY="AIzaSyApR29apHfoAMu2jJnL3bBb6GgcZvWy4Dg";
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contents:[{parts:[{text:`You are Cycle Sathi, a friendly assistant giving factual menstrual health and nutrition advice.\nQuestion: ${q}`}] }]})
     });
-    const data=await response.json();
+    const data=await resp.json();
     const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"Sorry, I couldn't find an answer right now.";
     ansBox.value=text;
   }catch(err){console.error(err);ansBox.value="Error reaching Gemini API. Please try again later.";}
 }
-function speakAnswer(){const text=answer.value;if(!text){alert("No answer to read.");return;}const utter=new SpeechSynthesisUtterance(text);utter.rate=1;utter.pitch=1;speechSynthesis.speak(utter);}
 
-/* ==================== LOAD USER DATA ==================== */
-function loadUserData(email){const prefix=email+"_";["name","age","cycleLen","allergies","conditions","notes"].forEach(id=>{const v=localStorage.getItem(prefix+id);if(v)document.getElementById(id).value=v;});loadRecords(email);}
+function speakAnswer(){
+  const text=answer.value;if(!text){alert("No answer to read.");return;}
+  const u=new SpeechSynthesisUtterance(text);u.rate=1;u.pitch=1;speechSynthesis.speak(u);
+}
+
+/* ----- Helpers ----- */
+function resetAllData(){
+  ["name","age","gender","cycleLen","allergies","conditions","notes",
+   "startDate","endDate","flow","pain","periodColor",
+   "nextPeriod","ovulation","fertile","question","answer"]
+   .forEach(id=>{
+     const el=document.getElementById(id);
+     if(el){
+       if(el.tagName==="SELECT")el.selectedIndex=0;
+       else if(el.type==="color")el.value="#ff8fa3";
+       else el.value="";
+     }
+   });
+  ["heart","o2","moves","temp"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  const tbody=document.getElementById("recordsTableBody");
+  if(tbody){tbody.innerHTML=`<tr><td colspan="3" class="text-center text-muted">No records yet</td></tr>`;}
+}
+
+function loadUserData(email){
+  const prefix=email+"_";
+  ["name","age","gender","cycleLen","allergies","conditions","notes"]
+    .forEach(id=>document.getElementById(id).value="");
+  document.getElementById("periodColor").value="#ff8fa3";
+  ["name","age","gender","cycleLen","allergies","conditions","notes"]
+   .forEach(id=>{const v=localStorage.getItem(prefix+id);if(v)document.getElementById(id).value=v;});
+  const pc=localStorage.getItem(prefix+"periodColor");
+  if(pc)document.getElementById("periodColor").value=pc;
+  loadRecords(email);
+}
 </script>
 </body>
 </html>
