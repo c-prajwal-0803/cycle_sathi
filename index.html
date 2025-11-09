@@ -149,7 +149,7 @@
     </div>
     <button class="btn btn-primary mb-3" onclick="askQuestion()">Ask</button>
     <div><label class="fw-semibold">Answer:</label>
-      <textarea id="answer" class="form-control" rows="5" readonly placeholder="Your answer will appear here..."></textarea>
+      <textarea id="answer" class="form-control" rows="5" readonly placeholder="Your answer will appear here..."></textarea>
     </div>
     <button id="listenBtn" class="btn mt-3" onclick="speakAnswer()">🔊 Listen to answer</button>
   </div>
@@ -160,155 +160,33 @@
   <div class="card-box">
     <h3>Records History</h3>
     <p class="text-muted">All saved Profile and Cycle entries.</p>
-    <div style="max-height:450px;overflow-y:auto;border:1px solid #e5d1f7;border-radius:10px;">
+    <div style="max-height:450px;overflow-y:auto;border:1px solid #e5d1f7;border-radius:10px;">
       <table class="table table-striped align-middle mb-0">
         <thead style="background:#f4e7fb;position:sticky;top:0;">
           <tr><th>Timestamp</th><th>Category</th><th>Data</th></tr>
         </thead>
-        <tbody id="recordsTableBody"><tr><td colspan="3" class="text-center text-muted">No records yet</td></tr></tbody>
+        <tbody id="recordsTableBody"><tr><td colspan="3" class="text-center text-muted">No records yet</td></tr></tbody>
       </table>
     </div>
   </div>
 </section>
 
-</div>
-</div>
+</div></div>
 
 <script>
 function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");}
-
-function registerUser(){
-  const e=signEmail.value.trim(),p=signPass.value,c=signConf.value;
-  if(!e||!p){alert("Fill all fields");return;}
-  if(p!==c){alert("Passwords don’t match");return;}
-  localStorage.setItem("userEmail",e); localStorage.setItem("userPass",p);
-  alert("Sign‑up successful!"); showScreen("screen2");
-}
-
-function loginUser(){
-  const e=loginEmail.value.trim(),p=loginPass.value;
-  const se=localStorage.getItem("userEmail"),sp=localStorage.getItem("userPass");
-  if(e===se&&p===sp){
-    alert("Login successful!");
-    localStorage.setItem("currentUser",e);
-    const hasProfile=localStorage.getItem(e+"_name")||localStorage.getItem(e+"_records");
-    if(!hasProfile){resetAllData();}
-    showScreen("home");
-    loadUserData(e);
-  } else alert("Invalid credentials.");
-}
-
-function logout(){
-  alert("Logged out successfully!");
-  showScreen("screen2");
-  localStorage.removeItem("currentUser");
-}
-
-function showSection(id){
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active-section"));
-  const el=document.getElementById(id);if(el)el.classList.add("active-section");
-}
-
-function saveProfile(){
- const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}
- const prefix=email+"_";
- ["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));
- alert("Profile saved!");
- addRecord("profile",{Name:name.value,Age:age.value,Gender:gender.value,Cycle_Length:cycleLen.value,Allergies:allergies.value,Conditions:conditions.value,Notes:notes.value,Heart_Rate:heart.value||"",O2:o2.value||"",Movement:moves.value||"",Temperature:temp.value||""});
-}
-
-function saveSymptoms(){
- const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}
- const prefix=email+"_", start=startDate.value;if(!start){alert("Select Start Date");return;}
- const sDate=new Date(start),addDays=d=>new Date(sDate.getTime()+d*86400000).toLocaleDateString();
- nextPeriod.value=addDays(28);ovulation.value=addDays(14);fertile.value=`${addDays(10)} to ${addDays(15)}`;
- ["startDate","endDate","flow","pain","periodColor"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));
- alert("Symptoms saved!");
- addRecord("track",{Name:name.value||localStorage.getItem(prefix+"name")||"(no name)",Start_Date:startDate.value,End_Date:endDate.value,Flow:flow.value,Pain_Level:pain.value,Period_Colour:periodColor.value,Next_Period:nextPeriod.value,Ovulation:ovulation.value,Fertile_Window:fertile.value});
-}
-
-/* ----- RECORDS ----- */
-function addRecord(type,dataObj){
-  const email=localStorage.getItem("currentUser");if(!email)return;
-  const prefix=email+"_";
-  const storedName=localStorage.getItem(prefix+"name")||"(not set)";
-  if(!dataObj.Name)dataObj.Name=storedName;
-  const timestamp=new Date().toLocaleString();
-  const recs=JSON.parse(localStorage.getItem(prefix+"records")||"[]");
-  recs.push({type,data:dataObj,time:timestamp});
-  localStorage.setItem(prefix+"records",JSON.stringify(recs));
-  loadRecords(email);
-}
-
-function loadRecords(email){
-  const tbody=document.getElementById("recordsTableBody");if(!tbody)return;
-  const prefix=email+"_";
-  const records=JSON.parse(localStorage.getItem(prefix+"records")||"[]").reverse();
-  if(!records.length){tbody.innerHTML=`<tr><td colspan="3" class="text-center text-muted">No records yet</td></tr>`;return;}
-  tbody.innerHTML=records.map(r=>{
-    const entries=Object.entries(r.data),
-          nameEntry=entries.find(([k])=>k==="Name"),
-          other=entries.filter(([k])=>k!=="Name");
-    const details=(nameEntry?`<div><strong>${nameEntry[0]}</strong>: ${nameEntry[1]||"-"}</div>`:"")+
-      other.map(([k,v])=>{
-        if(k==="Period_Colour"){return `<div><strong>${k}</strong>: <span style="display:inline-block;width:20px;height:20px;background:${v};border:1px solid #ccc;margin-left:5px;vertical-align:middle;"></span> ${v}</div>`;}
-        return `<div><strong>${k}</strong>: ${v||"-"}</div>`;
-      }).join("");
-    return `<tr><td>${r.time}</td><td>${r.type==="track"?"Cycle Tracking":"Profile"}</td><td>${details}</td></tr>`;
-  }).join("");
-}
-
-/* ----- LEARN (GEMINI API) ----- */
-async function askQuestion(){
-  const q=question.value.trim(),ansBox=answer;
-  if(!q){alert("Please enter a question about menstrual cycle or diet.");return;}
-  ansBox.value="Thinking...";
-  try{
-    const GEMINI_KEY="AIzaSyApR29apHfoAMu2jJnL3bBb6GgcZvWy4Dg";
-    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`,{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({contents:[{parts:[{text:`You are Cycle Sathi, a friendly assistant giving factual menstrual health and nutrition advice.\nQuestion: ${q}`}] }]})
-    });
-    const data=await resp.json();
-    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||"Sorry, I couldn't find an answer right now.";
-    ansBox.value=text;
-  }catch(err){console.error(err);ansBox.value="Error reaching Gemini API. Please try again later.";}
-}
-
-function speakAnswer(){
-  const text=answer.value;if(!text){alert("No answer to read.");return;}
-  const u=new SpeechSynthesisUtterance(text);u.rate=1;u.pitch=1;speechSynthesis.speak(u);
-}
-
-/* ----- Helpers ----- */
-function resetAllData(){
-  ["name","age","gender","cycleLen","allergies","conditions","notes",
-   "startDate","endDate","flow","pain","periodColor",
-   "nextPeriod","ovulation","fertile","question","answer"]
-   .forEach(id=>{
-     const el=document.getElementById(id);
-     if(el){
-       if(el.tagName==="SELECT")el.selectedIndex=0;
-       else if(el.type==="color")el.value="#ff8fa3";
-       else el.value="";
-     }
-   });
-  ["heart","o2","moves","temp"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
-  const tbody=document.getElementById("recordsTableBody");
-  if(tbody){tbody.innerHTML=`<tr><td colspan="3" class="text-center text-muted">No records yet</td></tr>`;}
-}
-
-function loadUserData(email){
-  const prefix=email+"_";
-  ["name","age","gender","cycleLen","allergies","conditions","notes"]
-    .forEach(id=>document.getElementById(id).value="");
-  document.getElementById("periodColor").value="#ff8fa3";
-  ["name","age","gender","cycleLen","allergies","conditions","notes"]
-   .forEach(id=>{const v=localStorage.getItem(prefix+id);if(v)document.getElementById(id).value=v;});
-  const pc=localStorage.getItem(prefix+"periodColor");
-  if(pc)document.getElementById("periodColor").value=pc;
-  loadRecords(email);
-}
+function registerUser(){const e=signEmail.value.trim(),p=signPass.value,c=signConf.value;if(!e||!p){alert("Fill all fields");return;}if(p!==c){alert("Passwords don’t match");return;}localStorage.setItem("userEmail",e);localStorage.setItem("userPass",p);alert("Sign‑up successful!");showScreen("screen2");}
+function loginUser(){const e=loginEmail.value.trim(),p=loginPass.value,se=localStorage.getItem("userEmail"),sp=localStorage.getItem("userPass");if(e===se&&p===sp){alert("Login successful!");localStorage.setItem("currentUser",e);const hasData=localStorage.getItem(e+"_name")||localStorage.getItem(e+"_records");if(!hasData)resetAllData();showScreen("home");loadUserData(e);}else alert("Invalid credentials.");}
+function logout(){alert("Logged out successfully!");showScreen("screen2");localStorage.removeItem("currentUser");}
+function showSection(id){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active-section"));document.getElementById(id).classList.add("active-section");}
+function saveProfile(){const email=localStorage.getItem("currentUser");if(!email)return alert("Login first.");const prefix=email+"_";["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));alert("Profile saved!");addRecord("profile",{Name:name.value,Age:age.value,Gender:gender.value,Cycle_Length:cycleLen.value,Allergies:allergies.value,Conditions:conditions.value,Notes:notes.value});}
+function saveSymptoms(){const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}const prefix=email+"_",start=startDate.value;if(!start)return alert("Select Start Date");const sd=new Date(start),addDays=d=>new Date(sd.getTime()+d*86400000).toLocaleDateString();nextPeriod.value=addDays(28);ovulation.value=addDays(14);fertile.value=`${addDays(10)} to ${addDays(15)}`;["startDate","endDate","flow","pain","periodColor"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));alert("Symptoms saved!");addRecord("track",{Name:name.value||localStorage.getItem(prefix+"name")||"(no name)",Start_Date:startDate.value,End_Date:endDate.value,Flow:flow.value,Pain_Level:pain.value,Period_Colour:periodColor.value,Next_Period:nextPeriod.value,Ovulation:ovulation.value,Fertile_Window:fertile.value});}
+function addRecord(type,data){const email=localStorage.getItem("currentUser");if(!email)return;const prefix=email+"_",records=JSON.parse(localStorage.getItem(prefix+"records")||"[]");records.push({type,data,time:new Date().toLocaleString()});localStorage.setItem(prefix+"records",JSON.stringify(records));loadRecords(email);}
+function loadRecords(email){const tbody=document.getElementById("recordsTableBody");if(!tbody)return;const prefix=email+"_",records=JSON.parse(localStorage.getItem(prefix+"records")||"[]").reverse();if(!records.length)return tbody.innerHTML=`<tr><td colspan='3' class='text-center text-muted'>No records yet</td></tr>`;tbody.innerHTML=records.map(r=>{const body=Object.entries(r.data).map(([k,v])=>k==="Period_Colour"?`<div><strong>${k}</strong>: <span style="display:inline-block;width:18px;height:18px;background:${v};border:1px solid #ccc;margin-left:5px;"></span></div>`:`<div><strong>${k}</strong>: ${v||"-"}</div>`).join("");return `<tr><td>${r.time}</td><td>${r.type==="track"?"Cycle Tracking":"Profile"}</td><td>${body}</td></tr>`;}).join("");}
+async function askQuestion(){const q=question.value.trim();if(!q)return alert("Enter a question.");answer.value="Thinking...";const HF_TOKEN="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";const model="google/flan-t5-base";try{const res=await fetch(`https://api-inference.huggingface.co/models/${model}`,{method:"POST",headers:{"Authorization":`Bearer ${HF_TOKEN}`,"Content-Type":"application/json"},body:JSON.stringify({inputs:q})});const data=await res.json();answer.value=data?.[0]?.generated_text||data?.generated_text||"Sorry, I couldn't find an answer right now.";}catch(err){console.error(err);answer.value="Error contacting Hugging Face API.";}}
+function speakAnswer(){const t=answer.value;if(!t)return alert("No answer to read.");const u=new SpeechSynthesisUtterance(t);u.rate=1;u.pitch=1;speechSynthesis.speak(u);}
+function resetAllData(){["name","age","gender","cycleLen","allergies","conditions","notes","startDate","endDate","flow","pain","periodColor","nextPeriod","ovulation","fertile","question","answer"].forEach(id=>{const el=document.getElementById(id);if(el){if(el.tagName==="SELECT")el.selectedIndex=0;else if(el.type==="color")el.value="#ff8fa3";else el.value="";}});["heart","o2","moves","temp"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});document.getElementById("recordsTableBody").innerHTML=`<tr><td colspan="3" class='text-center text-muted'>No records yet</td></tr>`;}
+function loadUserData(email){const prefix=email+"_";["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>document.getElementById(id).value="");document.getElementById("periodColor").value="#ff8fa3";["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>{const v=localStorage.getItem(prefix+id);if(v)document.getElementById(id).value=v;});const pc=localStorage.getItem(prefix+"periodColor");if(pc)document.getElementById("periodColor").value=pc;loadRecords(email);}
 </script>
 </body>
 </html>
