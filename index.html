@@ -143,7 +143,7 @@
 <section id="learn" class="section">
   <div class="card-box">
     <h3>Learn & Ask</h3>
-    <p class="text-muted">Ask menstrual health, symptom, or diet questions for AI guidance.</p>
+    <p class="text-muted">Ask menstrual health, symptom, or diet questions for AI guidance.</p>
     <div class="mb-3"><label class="fw-semibold">Your question:</label>
       <input id="question" class="form-control" placeholder="e.g. What foods help reduce cramps?">
     </div>
@@ -183,10 +183,69 @@ function saveProfile(){const email=localStorage.getItem("currentUser");if(!email
 function saveSymptoms(){const email=localStorage.getItem("currentUser");if(!email){alert("Login first.");return;}const prefix=email+"_",start=startDate.value;if(!start)return alert("Select Start Date");const sd=new Date(start),addDays=d=>new Date(sd.getTime()+d*86400000).toLocaleDateString();nextPeriod.value=addDays(28);ovulation.value=addDays(14);fertile.value=`${addDays(10)} to ${addDays(15)}`;["startDate","endDate","flow","pain","periodColor"].forEach(id=>localStorage.setItem(prefix+id,document.getElementById(id).value));alert("Symptoms saved!");addRecord("track",{Name:name.value||localStorage.getItem(prefix+"name")||"(no name)",Start_Date:startDate.value,End_Date:endDate.value,Flow:flow.value,Pain_Level:pain.value,Period_Colour:periodColor.value,Next_Period:nextPeriod.value,Ovulation:ovulation.value,Fertile_Window:fertile.value});}
 function addRecord(type,data){const email=localStorage.getItem("currentUser");if(!email)return;const prefix=email+"_",records=JSON.parse(localStorage.getItem(prefix+"records")||"[]");records.push({type,data,time:new Date().toLocaleString()});localStorage.setItem(prefix+"records",JSON.stringify(records));loadRecords(email);}
 function loadRecords(email){const tbody=document.getElementById("recordsTableBody");if(!tbody)return;const prefix=email+"_",records=JSON.parse(localStorage.getItem(prefix+"records")||"[]").reverse();if(!records.length)return tbody.innerHTML=`<tr><td colspan='3' class='text-center text-muted'>No records yet</td></tr>`;tbody.innerHTML=records.map(r=>{const body=Object.entries(r.data).map(([k,v])=>k==="Period_Colour"?`<div><strong>${k}</strong>: <span style="display:inline-block;width:18px;height:18px;background:${v};border:1px solid #ccc;margin-left:5px;"></span></div>`:`<div><strong>${k}</strong>: ${v||"-"}</div>`).join("");return `<tr><td>${r.time}</td><td>${r.type==="track"?"Cycle Tracking":"Profile"}</td><td>${body}</td></tr>`;}).join("");}
-async function askQuestion(){const q=question.value.trim();if(!q)return alert("Enter a question.");answer.value="Thinking...";const HF_TOKEN="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";const model="google/flan-t5-base";try{const res=await fetch(`https://api-inference.huggingface.co/models/${model}`,{method:"POST",headers:{"Authorization":`Bearer ${HF_TOKEN}`,"Content-Type":"application/json"},body:JSON.stringify({inputs:q})});const data=await res.json();answer.value=data?.[0]?.generated_text||data?.generated_text||"Sorry, I couldn't find an answer right now.";}catch(err){console.error(err);answer.value="Error contacting Hugging Face API.";}}
+
+/* === Updated AI Ask Function (uses local proxy) === */
+async function askQuestion() {
+  const q = question.value.trim();
+  if (!q) return alert("Enter a question.");
+  answer.value = "Thinking...";
+
+  try {
+    // Call your local Node proxy
+    const res = await fetch("http://localhost:3000/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: q })
+    });
+
+    const data = await res.json();
+    answer.value =
+      data?.[0]?.generated_text ||
+      data?.generated_text ||
+      "Sorry, I couldn't find an answer right now.";
+  } catch (err) {
+    console.error(err);
+    answer.value = "Error contacting proxy server.";
+  }
+}
+/* === End Ask Function === */
+
 function speakAnswer(){const t=answer.value;if(!t)return alert("No answer to read.");const u=new SpeechSynthesisUtterance(t);u.rate=1;u.pitch=1;speechSynthesis.speak(u);}
-function resetAllData(){["name","age","gender","cycleLen","allergies","conditions","notes","startDate","endDate","flow","pain","periodColor","nextPeriod","ovulation","fertile","question","answer"].forEach(id=>{const el=document.getElementById(id);if(el){if(el.tagName==="SELECT")el.selectedIndex=0;else if(el.type==="color")el.value="#ff8fa3";else el.value="";}});["heart","o2","moves","temp"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});document.getElementById("recordsTableBody").innerHTML=`<tr><td colspan="3" class='text-center text-muted'>No records yet</td></tr>`;}
-function loadUserData(email){const prefix=email+"_";["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>document.getElementById(id).value="");document.getElementById("periodColor").value="#ff8fa3";["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>{const v=localStorage.getItem(prefix+id);if(v)document.getElementById(id).value=v;});const pc=localStorage.getItem(prefix+"periodColor");if(pc)document.getElementById("periodColor").value=pc;loadRecords(email);}
+function resetAllData(){
+  ["name","age","gender","cycleLen","allergies","conditions","notes",
+   "startDate","endDate","flow","pain","periodColor",
+   "nextPeriod","ovulation","fertile","question","answer"]
+   .forEach(id=>{
+     const el=document.getElementById(id);
+     if(el){
+       if(el.tagName==="SELECT")el.selectedIndex=0;
+       else if(el.type==="color")el.value="#ff8fa3";
+       else el.value="";
+     }
+   });
+  ["heart","o2","moves","temp"].forEach(id=>{
+    const e=document.getElementById(id);
+    if(e) e.value="";
+  });
+  document.getElementById("recordsTableBody").innerHTML=
+    `<tr><td colspan="3" class='text-center text-muted'>No records yet</td></tr>`;
+}
+
+function loadUserData(email){
+  const prefix=email+"_";
+  ["name","age","gender","cycleLen","allergies","conditions","notes"]
+    .forEach(id=>document.getElementById(id).value="");
+  document.getElementById("periodColor").value="#ff8fa3";
+  ["name","age","gender","cycleLen","allergies","conditions","notes"]
+    .forEach(id=>{
+      const v=localStorage.getItem(prefix+id);
+      if(v) document.getElementById(id).value=v;
+    });
+  const pc=localStorage.getItem(prefix+"periodColor");
+  if(pc) document.getElementById("periodColor").value=pc;
+  loadRecords(email);
+}
 </script>
+
 </body>
 </html>
