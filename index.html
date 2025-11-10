@@ -256,10 +256,10 @@ async function updateSensors() {
     document.getElementById("o2").value = "80"; // placeholder
   } catch (err) {
     console.warn("ESP8266 fetch error:", err.message);
-    document.getElementById("heart").value = "59";
-    document.getElementById("temp").value = "39";
-    document.getElementById("moves").value = "0.97";
-    document.getElementById("o2").value = "78";
+    document.getElementById("heart").value = "60";
+    document.getElementById("temp").value = "38";
+    document.getElementById("moves").value = "0.96";
+    document.getElementById("o2").value = "77";
   }
 }
 updateSensors();
@@ -268,4 +268,5 @@ setInterval(updateSensors, 3000);
 
 </body>
 </html>
+
 
