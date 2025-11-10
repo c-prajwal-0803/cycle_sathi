@@ -1,3 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cycle Sathi Web</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body{font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#ffe6f0 0%,#f7ecff 100%);min-height:100vh;color:#333;}
+  .screen{display:none;} .active{display:block;}
+  h2,h3,h5{color:#630A60;}
+  .card-box{background:#fff;border-radius:15px;box-shadow:0 4px 12px rgba(0,0,0,0.1);padding:30px;margin:20px auto;}
+  .btn-primary{background-color:#e75480;border:none;} .btn-primary:hover{background-color:#d44672;}
+  .btn-success{background:#8ac926;border:none;} .btn-success:hover{background:#75b61e;}
+  .navbar{background:linear-gradient(90deg,#e75480,#bc6ff1);}
+  .navbar-brand{font-weight:600;letter-spacing:0.5px;}
+  .navbar .nav-link{color:white!important;font-weight:500;padding:8px 16px;}
+  .navbar .nav-link:hover{background:rgba(255,255,255,0.2);border-radius:5px;}
+  label{font-weight:500;}
+  input[type="date"],.form-control,.form-select,textarea{border-radius:10px;border:1px solid #ddd;}
+  #screen1{text-align:center;padding-top:10vh;}
+  #screen1 img{width:180px;border-radius:50%;border:4px solid #fff;box-shadow:0 4px 8px rgba(0,0,0,0.1);}
+  .section{display:none;} .active-section{display:block;}
+  #records table th,#records table td{vertical-align:top;font-size:0.9rem;}
+  #records table thead th{color:#630A60;font-weight:600;}
+  #learn input,#learn textarea{background:#fff8fb;}
+  #listenBtn{background-color:#bc6ff1;color:#fff;border:none;}#listenBtn:hover{background-color:#a655db;}
+</style>
+</head>
+<body>
+
+<!-- ===== SPLASH ===== -->
+<div id="screen1" class="screen active text-center">
+  <img src="https://via.placeholder.com/180/ffe6f0/630A60?text=Cycle+Sathi" alt="logo" class="mb-4">
+  <h2>Cycle Sathi</h2>
+  <p class="text-muted">Understand, track, and care for your cycle!</p>
+  <button class="btn btn-primary mt-3 px-4 py-2" onclick="showScreen('screen2')">Get Started</button>
+</div>
+
+<!-- ===== LOGIN ===== -->
+<div id="screen2" class="screen container py-5">
+  <div class="card-box col-md-6">
+    <h3 class="text-center mb-4">Login</h3>
+    <div class="mb-3"><label>Email / Username</label><input id="loginEmail" class="form-control"></div>
+    <div class="mb-3"><label>Password</label><input id="loginPass" type="password" class="form-control"></div>
+    <button class="btn btn-success w-100 mt-2" onclick="loginUser()">Login</button>
+    <p class="mt-3 text-center">New user? <a href="#" onclick="showScreen('screen4')">Sign Up</a></p>
+  </div>
+</div>
+
+<!-- ===== SIGNUP ===== -->
+<div id="screen4" class="screen container py-5">
+  <div class="card-box col-md-6">
+    <h3 class="text-center mb-4">Create Account</h3>
+    <div class="mb-3"><label>Email / Username</label><input id="signEmail" class="form-control"></div>
+    <div class="mb-3"><label>Password</label><input id="signPass" type="password" class="form-control"></div>
+    <div class="mb-3"><label>Confirm Password</label><input id="signConf" type="password" class="form-control"></div>
+    <button class="btn btn-primary w-100" onclick="registerUser()">Sign Up</button>
+    <button class="btn btn-link w-100 mt-2" onclick="showScreen('screen2')">Back to Login</button>
+  </div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div id="home" class="screen">
+<nav class="navbar navbar-expand-lg navbar-dark">
+  <div class="container">
+    <a class="navbar-brand">🌸 Cycle Sathi</a>
+    <div class="navbar-nav ms-auto">
+      <a class="nav-link" href="#" onclick="showSection('profile')">Profile</a>
+      <a class="nav-link" href="#" onclick="showSection('track')">Track</a>
+      <a class="nav-link" href="#" onclick="showSection('learn')">Learn</a>
+      <a class="nav-link" href="#" onclick="showSection('records')">Records</a>
+      <a class="nav-link" href="#" onclick="logout()">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4">
+
+<!-- ==== PROFILE ==== -->
+<section id="profile" class="section active-section">
+  <div class="card-box">
+    <h3>Profile</h3><hr>
+    <div class="row g-3">
+      <div class="col-md-6"><label>Name</label><input id="name" class="form-control"></div>
+      <div class="col-md-3"><label>Age</label><input id="age" type="number" class="form-control"></div>
+      <div class="col-md-3">
+        <label>Gender</label>
+        <select id="gender" class="form-select">
+          <option value="">Select Gender</option>
+          <option value="Female">Female</option>
+          <option value="Male">Male</option>
+          <option value="Other">Other</option>
+          <option value="Prefer not to say">Prefer not to say</option>
+        </select>
+      </div>
+      <div class="col-md-3"><label>Cycle Length (days)</label><input id="cycleLen" type="number" class="form-control"></div>
+      <div class="col-md-6"><label>Allergies</label><input id="allergies" class="form-control"></div>
+      <div class="col-md-6"><label>Medical Conditions</label><input id="conditions" class="form-control"></div>
+      <div class="col-md-12"><label>Notes</label><textarea id="notes" class="form-control" rows="2"></textarea></div>
+    </div>
+    <h5 class="mt-4">Vitals (from ESP8266)</h5>
+    <div class="row g-3">
+      <div class="col-md-3"><label>Heart Rate (BPM)</label><input id="heart" class="form-control" readonly></div>
+      <div class="col-md-3"><label>O₂ (%)</label><input id="o2" class="form-control" readonly></div>
+      <div class="col-md-3"><label>Movement</label><input id="moves" class="form-control" readonly></div>
+      <div class="col-md-3"><label>Temperature (°C)</label><input id="temp" class="form-control" readonly></div>
+    </div>
+    <button class="btn btn-success mt-3 px-4" onclick="saveProfile()">Save Profile</button>
+  </div>
+</section>
+
+<!-- ==== TRACK ==== -->
+<section id="track" class="section">
+  <div class="card-box">
+    <h3>Track Your Cycle</h3><hr>
+    <div class="row g-3">
+      <div class="col-md-6"><label>Start Date</label><input type="date" id="startDate" class="form-control"></div>
+      <div class="col-md-6"><label>End Date</label><input type="date" id="endDate" class="form-control"></div>
+    </div>
+    <h5 class="mt-4">Symptoms</h5>
+    <div class="row g-3">
+      <div class="col-md-4"><label>Flow Level</label>
+        <select id="flow" class="form-select"><option>Light</option><option>Moderate</option><option>Heavy</option></select>
+      </div>
+      <div class="col-md-4"><label>Pain Level</label><input type="range" id="pain" min="0" max="10" class="form-range"></div>
+      <div class="col-md-4"><label>Period Colour</label>
+        <input type="color" id="periodColor" class="form-control form-control-color" value="#ff8fa3">
+      </div>
+    </div>
+    <button class="btn btn-primary mt-3 px-4" onclick="saveSymptoms()">Save & Predict</button>
+    <h5 class="mt-4">Predictions</h5>
+    <div class="row g-3">
+      <div class="col-md-4"><label>Next Period</label><input class="form-control" id="nextPeriod" readonly></div>
+      <div class="col-md-4"><label>Ovulation</label><input class="form-control" id="ovulation" readonly></div>
+      <div class="col-md-4"><label>Fertile Window</label><input class="form-control" id="fertile" readonly></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==== LEARN ==== -->
+<section id="learn" class="section">
+  <div class="card-box">
+    <h3>Learn & Ask</h3>
+    <p class="text-muted">Ask menstrual health, symptom, or diet questions for AI guidance.</p>
+    <div class="mb-3"><label class="fw-semibold">Your question:</label>
+      <input id="question" class="form-control" placeholder="e.g. What foods help reduce cramps?">
+    </div>
+    <button class="btn btn-primary mb-3" onclick="askQuestion()">Ask</button>
+    <div><label class="fw-semibold">Answer:</label>
+      <textarea id="answer" class="form-control" rows="5" readonly placeholder="Your answer will appear here..."></textarea>
+    </div>
+    <button id="listenBtn" class="btn mt-3" onclick="speakAnswer()">🔊 Listen to answer</button>
+  </div>
+</section>
+
+<!-- ==== RECORDS ==== -->
+<section id="records" class="section">
+  <div class="card-box">
+    <h3>Records History</h3>
+    <p class="text-muted">All saved Profile and Cycle entries.</p>
+    <div style="max-height:450px;overflow-y:auto;border:1px solid #e5d1f7;border-radius:10px;">
+      <table class="table table-striped align-middle mb-0">
+        <thead style="background:#f4e7fb;position:sticky;top:0;">
+          <tr><th>Timestamp</th><th>Category</th><th>Data</th></tr>
+        </thead>
+        <tbody id="recordsTableBody"><tr><td colspan="3" class="text-center text-muted">No records yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</div></div>
+
+<!-- ==== SCRIPT ==== -->
 <script>
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -39,35 +215,24 @@ function showSection(id){
   document.getElementById(id).classList.add("active-section");
 }
 
-/* === SAVE PROFILE (now saves vitals too) === */
+/* === SAVE PROFILE (now saves vitals) === */
 function saveProfile(){
   const email=localStorage.getItem("currentUser");
   if(!email)return alert("Login first.");
   const prefix=email+"_";
-
-  // Save profile info
   ["name","age","gender","cycleLen","allergies","conditions","notes"].forEach(id=>{
     localStorage.setItem(prefix+id,document.getElementById(id).value);
   });
-
-  // Save vitals data
   ["heart","o2","moves","temp"].forEach(id=>{
     localStorage.setItem(prefix+id,document.getElementById(id).value);
   });
-
   alert("Profile & vitals saved!");
   addRecord("profile",{
-    Name:name.value,
-    Age:age.value,
-    Gender:gender.value,
-    Cycle_Length:cycleLen.value,
-    Allergies:allergies.value,
-    Conditions:conditions.value,
-    Notes:notes.value,
-    Heart_Rate:heart.value,
-    O2:o2.value,
-    Movement:moves.value,
-    Temperature:temp.value
+    Name:name.value,Age:age.value,Gender:gender.value,
+    Cycle_Length:cycleLen.value,Allergies:allergies.value,
+    Conditions:conditions.value,Notes:notes.value,
+    Heart_Rate:heart.value,O2:o2.value,
+    Movement:moves.value,Temperature:temp.value
   });
 }
 
@@ -86,14 +251,10 @@ function saveSymptoms(){
   alert("Symptoms saved!");
   addRecord("track",{
     Name:name.value||localStorage.getItem(prefix+"name")||"(no name)",
-    Start_Date:startDate.value,
-    End_Date:endDate.value,
-    Flow:flow.value,
-    Pain_Level:pain.value,
-    Period_Colour:periodColor.value,
-    Next_Period:nextPeriod.value,
-    Ovulation:ovulation.value,
-    Fertile_Window:fertile.value
+    Start_Date:startDate.value,End_Date:endDate.value,
+    Flow:flow.value,Pain_Level:pain.value,
+    Period_Colour:periodColor.value,Next_Period:nextPeriod.value,
+    Ovulation:ovulation.value,Fertile_Window:fertile.value
   });
 }
 
@@ -125,26 +286,21 @@ function loadRecords(email){
 }
 
 /* === AI Ask Function === */
-async function askQuestion() {
-  const q = question.value.trim();
-  if (!q) return alert("Enter a question.");
-  answer.value = "Thinking...";
-
-  try {
-    const res = await fetch("http://localhost:3000/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: q })
+async function askQuestion(){
+  const q=question.value.trim();
+  if(!q)return alert("Enter a question.");
+  answer.value="Thinking...";
+  try{
+    const res=await fetch("http://localhost:3000/ask",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({question:q})
     });
-
-    const data = await res.json();
-    answer.value =
-      data?.[0]?.generated_text ||
-      data?.generated_text ||
+    const data=await res.json();
+    answer.value=data?.[0]?.generated_text||data?.generated_text||
       "Sorry, I couldn't find an answer right now.";
-  } catch (err) {
+  }catch(err){
     console.error(err);
-    answer.value = "Error contacting proxy server.";
+    answer.value="Error contacting proxy server.";
   }
 }
 
@@ -176,42 +332,39 @@ function resetAllData(){
     `<tr><td colspan="3" class='text-center text-muted'>No records yet</td></tr>`;
 }
 
-/* === LOAD USER DATA (now loads vitals too) === */
 function loadUserData(email){
   const prefix=email+"_";
-  ["name","age","gender","cycleLen","allergies","conditions","notes"]
-    .forEach(id=>document.getElementById(id).value="");
-  document.getElementById("periodColor").value="#ff8fa3";
-
   ["name","age","gender","cycleLen","allergies","conditions","notes","heart","o2","moves","temp"]
     .forEach(id=>{
       const v=localStorage.getItem(prefix+id);
-      if(v) document.getElementById(id).value=v;
+      if(v)document.getElementById(id).value=v;
     });
-
   const pc=localStorage.getItem(prefix+"periodColor");
-  if(pc) document.getElementById("periodColor").value=pc;
+  if(pc)document.getElementById("periodColor").value=pc;
   loadRecords(email);
 }
 
-/* === Fetch and update ESP8266 sensor data === */
-async function updateSensors() {
-  try {
-    const res = await fetch("http://192.168.1.57/data"); // <-- your ESP8266 IP
-    if (!res.ok) throw new Error("Bad response");
-    const d = await res.json();
-    document.getElementById("heart").value = d.heart_rate?.toFixed(1) ?? "0";
-    document.getElementById("temp").value = d.temperature?.toFixed(1) ?? "0";
-    document.getElementById("moves").value = d.movement?.toFixed(2) ?? "0";
-    document.getElementById("o2").value = "80"; // placeholder
-  } catch (err) {
-    console.warn("ESP8266 fetch error:", err.message);
-    document.getElementById("heart").value = "60";
-    document.getElementById("temp").value = "38";
-    document.getElementById("moves").value = "0.96";
-    document.getElementById("o2").value = "77";
+/* === ESP8266 Sensor Data === */
+async function updateSensors(){
+  try{
+    const res=await fetch("http://192.168.1.57/data");
+    if(!res.ok)throw new Error("Bad response");
+    const d=await res.json();
+    document.getElementById("heart").value=d.heart_rate?.toFixed(1)??"0";
+    document.getElementById("temp").value=d.temperature?.toFixed(1)??"0";
+    document.getElementById("moves").value=d.movement?.toFixed(2)??"0";
+    document.getElementById("o2").value="80";
+  }catch(err){
+    console.warn("ESP8266 fetch error:",err.message);
+    document.getElementById("heart").value="60";
+    document.getElementById("temp").value="38";
+    document.getElementById("moves").value="0.96";
+    document.getElementById("o2").value="77";
   }
 }
 updateSensors();
-setInterval(updateSensors, 3000);
+setInterval(updateSensors,3000);
 </script>
+
+</body>
+</html>
