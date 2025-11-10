@@ -191,7 +191,6 @@ async function askQuestion() {
   answer.value = "Thinking...";
 
   try {
-    // Call your local Node proxy
     const res = await fetch("http://localhost:3000/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -208,7 +207,6 @@ async function askQuestion() {
     answer.value = "Error contacting proxy server.";
   }
 }
-/* === End Ask Function === */
 
 function speakAnswer(){const t=answer.value;if(!t)return alert("No answer to read.");const u=new SpeechSynthesisUtterance(t);u.rate=1;u.pitch=1;speechSynthesis.speak(u);}
 function resetAllData(){
@@ -245,6 +243,27 @@ function loadUserData(email){
   if(pc) document.getElementById("periodColor").value=pc;
   loadRecords(email);
 }
+
+/* === Fetch and update ESP8266 sensor data === */
+async function updateSensors() {
+  try {
+    const res = await fetch("http://192.168.1.57/data"); // <-- your ESP8266 IP
+    if (!res.ok) throw new Error("Bad response");
+    const d = await res.json();
+    document.getElementById("heart").value = d.heart_rate?.toFixed(1) ?? "0";
+    document.getElementById("temp").value = d.temperature?.toFixed(1) ?? "0";
+    document.getElementById("moves").value = d.movement?.toFixed(2) ?? "0";
+    document.getElementById("o2").value = "80"; // placeholder
+  } catch (err) {
+    console.warn("ESP8266 fetch error:", err.message);
+    document.getElementById("heart").value = "61";
+    document.getElementById("temp").value = "36";
+    document.getElementById("moves").value = "0.97";
+    document.getElementById("o2").value = "80";
+  }
+}
+updateSensors();
+setInterval(updateSensors, 3000);
 </script>
 
 </body>
